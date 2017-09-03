@@ -27,6 +27,7 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.aznagy.paintproplayer.DAO.AudioListStorage;
 import com.example.aznagy.paintproplayer.R;
@@ -318,9 +319,15 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void playAudio(ArrayList<Audio> audioList, int audioIndex) {
+    private boolean playAudio(ArrayList<Audio> audioList, int audioIndex) {
         Log.d(LOG_TAG, "playAudio");
         //Check is service is active
+
+        if(audioList == null || audioList.isEmpty()) {
+            Toast.makeText(this,"No music found",Toast.LENGTH_LONG).show();
+            return false;
+        }
+
         if (!serviceBound) {
             Log.d(LOG_TAG, "playAudio-service not bound yet");
             AudioListStorage storage = new AudioListStorage(getApplicationContext());
@@ -343,6 +350,7 @@ public class MainActivity extends AppCompatActivity {
             Intent broadcastIntent = new Intent(MediaPlayerService.INTENT_PLAY_AUDIO);
             sendBroadcast(broadcastIntent);
         }
+        return true;
     }
 
     @Override
@@ -373,20 +381,21 @@ public class MainActivity extends AppCompatActivity {
         Button b = (Button) view;
         if (b.getText().equals(getString(R.string.resume))) {
             Log.d(LOG_TAG, "OnPlayClick-resume");
-            if (playerService != null) {
+            if (playerService != null && serviceBound) {
                 playerService.resumeClicked();
                 b.setText(R.string.pause);
             }
         } else if (b.getText().equals(getString(R.string.pause))) {
             Log.d(LOG_TAG, "OnPlayClick-pause");
-            if (playerService != null) {
+            if (playerService != null && serviceBound) {
                 playerService.pauseClicked();
                 b.setText(R.string.resume);
             }
         } else if (b.getText().equals(getString(R.string.play))) {
             Log.d(LOG_TAG, "OnPlayClick-play");
-            playAudio(audioList, 0);
-            b.setText(R.string.pause);
+            if(playAudio(audioList, 0)) {
+                b.setText(R.string.pause);
+            }
         }
     }
 
